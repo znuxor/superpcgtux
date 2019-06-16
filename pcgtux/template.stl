@@ -1,0 +1,20 @@
+(supertux-level
+  (version 3)
+  (name (_ "Procedurally Generated"))
+  (author "You")
+  (license "None")
+  (sector
+    (name "main")
+    (gravity 10.000000)
+    COINS
+    (tilemap
+      (solid #t)
+      (z-pos 0)
+      (width 150)
+      (height 16)
+      (tiles
+      LEVELMAP
+      )
+    )
+  )
+)

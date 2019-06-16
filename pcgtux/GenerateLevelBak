@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+import os
+import numpy as np
+
+TEMPLATE_LOC = os.path.join(os.path.dirname(__file__), 'template.stl')
+LEVEL_DIR = os.path.expanduser('~/.local/share/supertux2/levels/Infinitux')
+GEN_FILENAME = 'generated.stl'
+
+HEIGHT = 15
+WIDTH = 320
+
+ALLOWED_TILES = [0, 48]
+
+def generate_level(algorithm, levels_dir=LEVEL_DIR, gen_filename=GEN_FILENAME):
+    '''Drives the algorithm and makes the verifications'''
+    algo = algorithm(WIDTH, HEIGHT)
+    print('Begin level generation using {}...'.format(type(algo)))
+
+    algo.generate_level()
+    levelmap = algo.get_map()
+
+    _verify_generated_level(levelmap)
+
+    print('Loading level template...')
+    with open(TEMPLATE_LOC, 'r') as f:
+        level_template = f.read()
+        start, end = level_template.split('LEVELMAP')
+        start, middle = start.split('COINS')
+
+    formatted_map = ''
+    for line in levelmap:
+        formatted_map += ' '.join(str(tile) for tile in line)
+        formatted_map += '\n'
+
+    print('Start saving level...')
+    with open(os.path.join(levels_dir, gen_filename), 'w+') as f:
+        f.write(start)
+        f.write(middle)
+        f.write(formatted_map)
+        f.write(end)
+    print('Done saving level.')
+
+def _verify_generated_level(levelmap):
+    # map types verification, it should be a list of list of chars, with rows
+
+    ok_example_map = np.zeros((HEIGHT, WIDTH), dtype=int)
+
+    if type(levelmap) != type(ok_example_map):
+        raise Exception('Wrong type for map: Expected: {}, Actual: {}'.format(type(ok_example_map), type(levelmap)))
+
+    # map size verification
+    if levelmap.shape != ok_example_map.shape:
+        raise Exception("Map width is incorrect! Expected: {} Actual: {}".format(ok_example_map.shape, levelmap.shape))
+
+    # data type verification:
+    if levelmap.dtype != ok_example_map.dtype:
+        raise Exception("Map data type is incorrect! Expected: {} Actual: {}".format(ok_example_map.dtype, levelmap.dtype))
+
+    # tile value verification
+    for location, value in np.ndenumerate(levelmap):
+        if value not in ALLOWED_TILES:
+            raise Exception("Position {} has incorrect value: {}".format(location, value))
